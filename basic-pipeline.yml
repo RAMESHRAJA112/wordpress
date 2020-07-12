@@ -100,15 +100,19 @@ Resources:
             - Name: TemplateSource
               ActionTypeId:
                 Category: Source
-                Owner: AWS
-                Provider: S3
+                Owner: ThirdParty
+                Provider: GitHub
                 Version: '1'
-              Configuration:
-                S3Bucket: !Ref 'S3Bucket'
-                S3ObjectKey: !Ref 'SourceS3Key'
-              OutputArtifacts:
-                - Name: TemplateSource
-              RunOrder: '1'
+              configuration:
+                Branch: master
+                OAuthToken: "****"
+                Owner: shreeni123
+                PollForSourceChanges: 'false'
+                Repo: wordpress
+              outputArtifacts:
+                - name: TemplateSource
+              inputArtifacts: []
+              region: us-east-1
         - Name: TestStage
           Actions:
             - Name: CreateStack
