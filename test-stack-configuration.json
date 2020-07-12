@@ -1,9 +1,17 @@
 {
   "Parameters" : {
+    "DBAllocatedStorage" : "5",
+    "DBClass" : "db.t2.small",
     "DBName" : "TestWordPressDB",
     "DBPassword" : "TestDBRootPassword",
     "DBRootPassword" : "TestDBRootPassword",
-    "DBUser" : "TestDBuser",    
-    "KeyName" : "aws"
+    "DBUser" : "TestDBuser", 
+    "InstanceType" : "t2.small",
+    "KeyName" : "aws",
+    "MultiAZDatabase" : "true",
+    "SSHLocation" : "0.0.0.0/0",
+    "Subnets" : "subnet-4d1af06c (172.31.80.0/20), subnet-55ba5533 (172.31.0.0/20), subnet-a722caf8 (172.31.32.0/20)",
+    "VpcId" : "vpc-55704b2f (172.31.0.0/16)",
+    "WebServerCapacity" : "1"
   }
 }
