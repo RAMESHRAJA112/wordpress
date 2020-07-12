@@ -1,0 +1,123 @@
+---
+pipeline:
+  name: wordpress
+  roleArn: arn:aws:iam::692963223244:role/word-press-PipelineRole-N3IF8LWS5R9K
+  artifactStore:
+    type: S3
+    location: word-press-artifactstorebucket-v54r69leeiwz
+  stages:
+  - name: S3Source
+    actions:
+    - name: TemplateSource
+      actionTypeId:
+        category: Source
+        owner: ThirdParty
+        provider: GitHub
+        version: '1'
+      runOrder: 1
+      configuration:
+        Branch: master
+        OAuthToken: "****"
+        Owner: shreeni123
+        PollForSourceChanges: 'false'
+        Repo: wordpress
+      outputArtifacts:
+      - name: TemplateSource
+      inputArtifacts: []
+      region: us-east-1
+  - name: TestStage
+    actions:
+    - name: CreateStack
+      actionTypeId:
+        category: Deploy
+        owner: AWS
+        provider: CloudFormation
+        version: '1'
+      runOrder: 1
+      configuration:
+        ActionMode: REPLACE_ON_FAILURE
+        RoleArn: arn:aws:iam::692963223244:role/word-press-CFNRole-1XUPCU2VG6ZA5
+        StackName: Test-MyWordPressSite
+        TemplateConfiguration: TemplateSource::test-stack-configuration.json
+        TemplatePath: TemplateSource::wordpress-single-instance.yaml
+      outputArtifacts: []
+      inputArtifacts:
+      - name: TemplateSource
+      region: us-east-1
+    - name: ApproveTestStack
+      actionTypeId:
+        category: Approval
+        owner: AWS
+        provider: Manual
+        version: '1'
+      runOrder: 2
+      configuration:
+        CustomData: Do you want to create a change set against the production stack
+          and delete the Test-MyWordPressSite stack?
+        NotificationArn: arn:aws:sns:us-east-1:692963223244:word-press-CodePipelineSNSTopic-1EQYVFDKQIJJJ
+      outputArtifacts: []
+      inputArtifacts: []
+    - name: DeleteTestStack
+      actionTypeId:
+        category: Deploy
+        owner: AWS
+        provider: CloudFormation
+        version: '1'
+      runOrder: 3
+      configuration:
+        ActionMode: DELETE_ONLY
+        RoleArn: arn:aws:iam::692963223244:role/word-press-CFNRole-1XUPCU2VG6ZA5
+        StackName: Test-MyWordPressSite
+      outputArtifacts: []
+      inputArtifacts: []
+  - name: ProdStage
+    actions:
+    - name: CreateChangeSet
+      actionTypeId:
+        category: Deploy
+        owner: AWS
+        provider: CloudFormation
+        version: '1'
+      runOrder: 1
+      configuration:
+        ActionMode: CHANGE_SET_REPLACE
+        ChangeSetName: UpdatePreview-MyWordPressSite
+        RoleArn: arn:aws:iam::692963223244:role/word-press-CFNRole-1XUPCU2VG6ZA5
+        StackName: Prod-MyWordPressSite
+        TemplateConfiguration: TemplateSource::prod-stack-configuration.json
+        TemplatePath: TemplateSource::cf-word-press.json
+      outputArtifacts: []
+      inputArtifacts:
+      - name: TemplateSource
+    - name: ApproveChangeSet
+      actionTypeId:
+        category: Approval
+        owner: AWS
+        provider: Manual
+        version: '1'
+      runOrder: 2
+      configuration:
+        CustomData: A new change set was created for the Prod-MyWordPressSite stack.
+          Do you want to implement the changes?
+        NotificationArn: arn:aws:sns:us-east-1:692963223244:word-press-CodePipelineSNSTopic-1EQYVFDKQIJJJ
+      outputArtifacts: []
+      inputArtifacts: []
+    - name: ExecuteChangeSet
+      actionTypeId:
+        category: Deploy
+        owner: AWS
+        provider: CloudFormation
+        version: '1'
+      runOrder: 3
+      configuration:
+        ActionMode: CHANGE_SET_EXECUTE
+        ChangeSetName: UpdatePreview-MyWordPressSite
+        RoleArn: arn:aws:iam::692963223244:role/word-press-CFNRole-1XUPCU2VG6ZA5
+        StackName: Prod-MyWordPressSite
+      outputArtifacts: []
+      inputArtifacts: []
+  version: 4
+metadata:
+  pipelineArn: arn:aws:codepipeline:us-east-1:692963223244:wordpress
+  created: '2020-07-12T16:48:27.797000-04:00'
+  updated: '2020-07-12T17:09:04.503000-04:00'

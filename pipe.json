@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: "2010-09-09"
+AWSTemplateFormatVersion: 2010-09-09
 
 Description: >
   AWS CloudFormation Sample Template Continuous Delievery: This template
@@ -21,7 +21,7 @@ Parameters:
     Description: The file name of the source artifact, such as myfolder/myartifact.zip
     Type: String
   TemplateFileName:
-    Default: wordpress-single-instance.yaml
+    Default: cf-word-press.json
     Description: The file name of the WordPress template
     Type: String
   TestStackName:
@@ -52,20 +52,20 @@ Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
       - Label:
-          default: "CodePipeline Settings"
+          default: CodePipeline Settings
         Parameters:
           - PipelineName
           - S3Bucket
           - SourceS3Key
           - Email
       - Label:
-          default: "Test Stack Settings"
+          default: Test Stack Settings
         Parameters:
           - TestStackName
           - TemplateFileName
           - TestStackConfig
       - Label:
-          default: "Production Stack Settings"
+          default: Production Stack Settings
         Parameters:
           - ChangeSetName
           - ProdStackName
@@ -82,33 +82,33 @@ Resources:
     Type: AWS::SNS::Topic
     Properties:
       Subscription:
-        - Endpoint: !Ref Email
           Protocol: email
 
   Pipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
       ArtifactStore:
-        Location: !Ref 'ArtifactStoreBucket'
         Type: S3
       DisableInboundStageTransitions: []
-      Name: !Ref 'PipelineName'
-      RoleArn: !GetAtt [PipelineRole, Arn]
       Stages:
-        - Name: S3Source
+        - Name: Source-BitBucket
           Actions:
             - Name: TemplateSource
               ActionTypeId:
                 Category: Source
-                Owner: AWS
-                Provider: S3
+                Owner: ThirdParty
+                Provider: GitHub
                 Version: '1'
-              Configuration:
-                S3Bucket: !Ref 'S3Bucket'
-                S3ObjectKey: !Ref 'SourceS3Key'
-              OutputArtifacts:
-                - Name: TemplateSource
-              RunOrder: '1'
+              configuration:
+                Branch: master
+                OAuthToken: ****
+                Owner: shreeni123
+                PollForSourceChanges: 'false'
+                Repo: wordpress
+              outputArtifacts:
+                - name: TemplateSource
+              inputArtifacts: []
+              region: us-east-1
         - Name: TestStage
           Actions:
             - Name: CreateStack
@@ -121,10 +121,6 @@ Resources:
                 - Name: TemplateSource
               Configuration:
                 ActionMode: REPLACE_ON_FAILURE
-                RoleArn: !GetAtt [CFNRole, Arn]
-                StackName: !Ref TestStackName
-                TemplateConfiguration: !Sub "TemplateSource::${TestStackConfig}"
-                TemplatePath: !Sub "TemplateSource::${TemplateFileName}"
               RunOrder: '1'
             - Name: ApproveTestStack
               ActionTypeId:
@@ -133,8 +129,6 @@ Resources:
                 Provider: Manual
                 Version: '1'
               Configuration:
-                NotificationArn: !Ref CodePipelineSNSTopic
-                CustomData: !Sub 'Do you want to create a change set against the production stack and delete the ${TestStackName} stack?'
               RunOrder: '2'
             - Name: DeleteTestStack
               ActionTypeId:
@@ -144,8 +138,6 @@ Resources:
                 Version: '1'
               Configuration:
                 ActionMode: DELETE_ONLY
-                RoleArn: !GetAtt [CFNRole, Arn]
-                StackName: !Ref TestStackName
               RunOrder: '3'
         - Name: ProdStage
           Actions:
@@ -159,11 +151,6 @@ Resources:
                 - Name: TemplateSource
               Configuration:
                 ActionMode: CHANGE_SET_REPLACE
-                RoleArn: !GetAtt [CFNRole, Arn]
-                StackName: !Ref ProdStackName
-                ChangeSetName: !Ref ChangeSetName
-                TemplateConfiguration: !Sub "TemplateSource::${ProdStackConfig}"
-                TemplatePath: !Sub "TemplateSource::${TemplateFileName}"
               RunOrder: '1'
             - Name: ApproveChangeSet
               ActionTypeId:
@@ -172,8 +159,6 @@ Resources:
                 Provider: Manual
                 Version: '1'
               Configuration:
-                NotificationArn: !Ref CodePipelineSNSTopic
-                CustomData: !Sub 'A new change set was created for the ${ProdStackName} stack. Do you want to implement the changes?'
               RunOrder: '2'
             - Name: ExecuteChangeSet
               ActionTypeId:
@@ -183,9 +168,6 @@ Resources:
                 Version: '1'
               Configuration:
                 ActionMode: CHANGE_SET_EXECUTE
-                ChangeSetName: !Ref ChangeSetName
-                RoleArn: !GetAtt [CFNRole, Arn]
-                StackName: !Ref ProdStackName
               RunOrder: '3'
   CFNRole:
     Type: AWS::IAM::Role
