@@ -4,7 +4,6 @@
     "DBClass" : "db.t2.small",
     "DBName" : "TestWordPressDB",
     "DBPassword" : "TestDBRootPassword",
-    "DBRootPassword" : "TestDBRootPassword",
     "DBUser" : "TestDBuser", 
     "InstanceType" : "t2.small",
     "KeyName" : "aws",
