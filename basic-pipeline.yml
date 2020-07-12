@@ -21,7 +21,7 @@ Parameters:
     Description: The file name of the source artifact, such as myfolder/myartifact.zip
     Type: String
   TemplateFileName:
-    Default: wordpress-single-instance.yaml
+    Default: cf-word-press.json
     Description: The file name of the WordPress template
     Type: String
   TestStackName:
