@@ -95,7 +95,7 @@ Resources:
       Name: !Ref 'PipelineName'
       RoleArn: !GetAtt [PipelineRole, Arn]
       Stages:
-        - Name: S3Source
+        - Name: Source-BitBucket
           Actions:
             - Name: TemplateSource
               ActionTypeId:
