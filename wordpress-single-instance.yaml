@@ -433,11 +433,7 @@ Resources:
                 sed -i "s/'database_name_here'/'${DBName}'/g" wp-config.php
                 sed -i "s/'username_here'/'${DBUser}'/g" wp-config.php
                 sed -i "s/'password_here'/'${DBPassword}'/g" wp-config.php
-                cd /var/www/html/wordpress
-                rm -rf .git
-                git init
-                git remote add origin https://github.com/RAMESHRAJA112/wordpress1.git
-                git pull origin master
+                
                 
                 
                
