@@ -8,22 +8,16 @@ Description: >
   artifact to automatically create stacks and change sets.
   **WARNING** This template creates an Amazon EC2 instance. You will be billed
   for the AWS resources used when you create a stack using this template.
-
 Parameters:
   PipelineName:
     Description: A name for pipeline
     Type: String
-  Branch:
-    Description: SCM Branch
-    Type: String
-  Repo-owner:
-    Description: Repo user-id
-    Type: String
-  Repo-name:  
-    Description: Repo name
-    Type: String  
   S3Bucket:
     Description: The name of the S3 bucket that contains the source artifact, which must be in the same region as this stack
+    Type: String
+  SourceS3Key:
+    Default: wordpress-single-instance.zip
+    Description: The file name of the source artifact, such as myfolder/myartifact.zip
     Type: String
   TemplateFileName:
     Default: wordpress-single-instance.yaml
@@ -105,14 +99,10 @@ Resources:
             - Name: TemplateSource
               ActionTypeId:
                 Category: Source
-                Owner: ThirdParty
-                Provider: GitHub
+                Owner: AWS
+                Provider: S3
                 Version: '1'
               Configuration:
-                Branch: !Ref 'Branch'
-                Owner: !Ref 'Repo-owner'
-                Repo: !Ref 'Repo-name'
-                PollForSourceChanges: 'false'
                 S3Bucket: !Ref 'S3Bucket'
                 S3ObjectKey: !Ref 'SourceS3Key'
               OutputArtifacts:
