@@ -108,7 +108,7 @@ Resources:
               OutputArtifacts:
                 - Name: TemplateSource
               RunOrder: '1'
-        - Name: TestStage
+        - Name: DevStage
           Actions:
             - Name: CreateStack
               ActionTypeId:
