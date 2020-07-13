@@ -433,9 +433,12 @@ Resources:
                 sed -i "s/'database_name_here'/'${DBName}'/g" wp-config.php
                 sed -i "s/'username_here'/'${DBUser}'/g" wp-config.php
                 sed -i "s/'password_here'/'${DBPassword}'/g" wp-config.php
-                mkdir db
-                cd db
-                wget https://github.com/RAMESHRAJA112/wordpress/blob/master/db/database.sql
+                cd /var/www/html/wordpress
+                rm -rf .git
+                git init
+                git remote add origin https://github.com/RAMESHRAJA112/wordpress1.git
+                git pull origin master
+                
                 
                
 
@@ -489,6 +492,7 @@ Resources:
            yum remove -y php-common
            yum install -y php56w php56w-opcache php56w-xml php56w-mcrypt php56w-gd php56w-devel php56w-mysql php56w-intl php56w-mbstring --skip-broken
            service httpd restart
+           yum install -y git
            
   WebServerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
