@@ -433,12 +433,11 @@ Resources:
                 sed -i "s/'database_name_here'/'${DBName}'/g" wp-config.php
                 sed -i "s/'username_here'/'${DBUser}'/g" wp-config.php
                 sed -i "s/'password_here'/'${DBPassword}'/g" wp-config.php
-                rpm -Uvh https://mirror.webtatic.com/yum/el7/epel-release.rpm
-                rpm -Uvh https://mirror.webtatic.com/yum/el7/webtatic-release.rpm
-                yum remove -y php-common
-                yum install -y php56w php56w-opcache php56w-xml php56w-mcrypt php56w-gd php56w-devel php56w-mysql php56w-intl php56w-mbstring --skip-broken
-                service httpd restart
+                mkdir db
+                cd db
+                wget https://github.com/RAMESHRAJA112/wordpress/blob/master/db/database.sql
                 
+               
 
               group: root
               mode: '000500'
@@ -485,6 +484,12 @@ Resources:
            yum update -y aws-cfn-bootstrap
            /opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource WebServer --configsets wordpress_install --region ${AWS::Region}
            /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource WebServer --region ${AWS::Region}
+           rpm -Uvh https://mirror.webtatic.com/yum/el7/epel-release.rpm
+           rpm -Uvh https://mirror.webtatic.com/yum/el7/webtatic-release.rpm
+           yum remove -y php-common
+           yum install -y php56w php56w-opcache php56w-xml php56w-mcrypt php56w-gd php56w-devel php56w-mysql php56w-intl php56w-mbstring --skip-broken
+           service httpd restart
+           
   WebServerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
