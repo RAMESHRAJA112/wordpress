@@ -1,0 +1,166 @@
+{
+    "pipeline": {
+        "name": "test-wordpress",
+        "roleArn": "arn:aws:iam::281169760564:role/Wordpress-pipeline-PipelineRole-VDRN5SYFJ7DA",
+        "artifactStore": {
+            "type": "S3",
+            "location": "wordpress-pipeline-artifactstorebucket-qn8hesjhi4g5"
+        },
+        "stages": [
+            {
+                "name": "Checkout-from-SCM",
+                "actions": [
+                    {
+                        "name": "TemplateSource",
+                        "actionTypeId": {
+                            "category": "Source",
+                            "owner": "ThirdParty",
+                            "provider": "GitHub",
+                            "version": "1"
+                        },
+                        "runOrder": 1,
+                        "configuration": {
+                            "Branch": "master",
+                            "Owner": "RAMESHRAJA112",
+                            "PollForSourceChanges": "false",
+                            "Repo": "wordpress"
+                        },
+                        "outputArtifacts": [
+                            {
+                                "name": "TemplateSource"
+                            }
+                        ],
+                        "inputArtifacts": [],
+                        "region": "us-east-1"
+                    }
+                ]
+            },
+            {
+                "name": "TestStage",
+                "actions": [
+                    {
+                        "name": "CreateStack",
+                        "actionTypeId": {
+                            "category": "Deploy",
+                            "owner": "AWS",
+                            "provider": "CloudFormation",
+                            "version": "1"
+                        },
+                        "runOrder": 1,
+                        "configuration": {
+                            "ActionMode": "REPLACE_ON_FAILURE",
+                            "RoleArn": "arn:aws:iam::281169760564:role/Wordpress-pipeline-CFNRole-1H7095XU2FQXN",
+                            "StackName": "Test-MyWordPressSite",
+                            "TemplateConfiguration": "TemplateSource::test-stack-configuration.json",
+                            "TemplatePath": "TemplateSource::wordpress-single-instance.yaml"
+                        },
+                        "outputArtifacts": [],
+                        "inputArtifacts": [
+                            {
+                                "name": "TemplateSource"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "ApproveTestStack",
+                        "actionTypeId": {
+                            "category": "Approval",
+                            "owner": "AWS",
+                            "provider": "Manual",
+                            "version": "1"
+                        },
+                        "runOrder": 2,
+                        "configuration": {
+                            "CustomData": "Do you want to create a change set against the production stack and delete the Test-MyWordPressSite stack?",
+                            "NotificationArn": "arn:aws:sns:us-east-1:281169760564:Wordpress-pipeline-CodePipelineSNSTopic-6MJ6A9CJIRDC"
+                        },
+                        "outputArtifacts": [],
+                        "inputArtifacts": []
+                    },
+                    {
+                        "name": "DeleteTestStack",
+                        "actionTypeId": {
+                            "category": "Deploy",
+                            "owner": "AWS",
+                            "provider": "CloudFormation",
+                            "version": "1"
+                        },
+                        "runOrder": 3,
+                        "configuration": {
+                            "ActionMode": "DELETE_ONLY",
+                            "RoleArn": "arn:aws:iam::281169760564:role/Wordpress-pipeline-CFNRole-1H7095XU2FQXN",
+                            "StackName": "Test-MyWordPressSite"
+                        },
+                        "outputArtifacts": [],
+                        "inputArtifacts": []
+                    }
+                ]
+            },
+            {
+                "name": "ProdStage",
+                "actions": [
+                    {
+                        "name": "CreateChangeSet",
+                        "actionTypeId": {
+                            "category": "Deploy",
+                            "owner": "AWS",
+                            "provider": "CloudFormation",
+                            "version": "1"
+                        },
+                        "runOrder": 1,
+                        "configuration": {
+                            "ActionMode": "CHANGE_SET_REPLACE",
+                            "ChangeSetName": "UpdatePreview-MyWordPressSite",
+                            "RoleArn": "arn:aws:iam::281169760564:role/Wordpress-pipeline-CFNRole-1H7095XU2FQXN",
+                            "StackName": "Prod-MyWordPressSite",
+                            "TemplateConfiguration": "TemplateSource::prod-stack-configuration.json",
+                            "TemplatePath": "TemplateSource::wordpress-single-instance.yaml"
+                        },
+                        "outputArtifacts": [],
+                        "inputArtifacts": [
+                            {
+                                "name": "TemplateSource"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "ApproveChangeSet",
+                        "actionTypeId": {
+                            "category": "Approval",
+                            "owner": "AWS",
+                            "provider": "Manual",
+                            "version": "1"
+                        },
+                        "runOrder": 2,
+                        "configuration": {
+                            "CustomData": "A new change set was created for the Prod-MyWordPressSite stack. Do you want to implement the changes?",
+                            "NotificationArn": "arn:aws:sns:us-east-1:281169760564:Wordpress-pipeline-CodePipelineSNSTopic-6MJ6A9CJIRDC"
+                        },
+                        "outputArtifacts": [],
+                        "inputArtifacts": []
+                    },
+                    {
+                        "name": "ExecuteChangeSet",
+                        "actionTypeId": {
+                            "category": "Deploy",
+                            "owner": "AWS",
+                            "provider": "CloudFormation",
+                            "version": "1"
+                        },
+                        "runOrder": 3,
+                        "configuration": {
+                            "ActionMode": "CHANGE_SET_EXECUTE",
+                            "ChangeSetName": "UpdatePreview-MyWordPressSite",
+                            "RoleArn": "arn:aws:iam::281169760564:role/Wordpress-pipeline-CFNRole-1H7095XU2FQXN",
+                            "StackName": "Prod-MyWordPressSite"
+                        },
+                        "outputArtifacts": [],
+                        "inputArtifacts": []
+                    }
+                ]
+            }
+        ],
+        "version": 2
+    }
+    
+}
